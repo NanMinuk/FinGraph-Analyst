@@ -5,7 +5,7 @@
 투자 포인트와 리스크를 구조화하는 **Agentic GraphRAG 분석 시스템**입니다.
 
 ---
-<img width="2437" height="754" alt="image" src="https://github.com/user-attachments/assets/20c07ff9-75fe-4fd3-9d39-acb98e4a778d" />
+
 
 ## Overview
 
@@ -17,6 +17,8 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 ### Example
 - **삼성전자 최근 투자포인트 정리해줘**
 - **SK하이닉스 최근 리스크 요인 알려줘**
+
+<img width="2437" height="754" alt="image" src="https://github.com/user-attachments/assets/20c07ff9-75fe-4fd3-9d39-acb98e4a778d" />
 
 ---
 
