@@ -32,41 +32,69 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 
 ## Key Features
 
+### 0. Workflow Orchestration
+- **LangGraph**
+- 전체 분석 흐름을 관리하는 orchestration layer.
+- 현재 workflow는 다음 두 개의 핵심 노드로 구성:
+  - `route_node`
+  - `analysis_agent_node`
+
 ### 1. Intent-aware analysis
-LLM 기반 intent classification으로 질의를 다음 유형으로 분류.
+- **LangChain + OpenAI LLM**
+- `route_node`에서 사용자 질의를 분석하여 intent를 분류합니다.
+- 지원 intent:
+  - `company_analysis`
+  - `risk_analysis`
+  - `relation_query` *(현재는 실험 단계)*
 
-- `company_analysis`
-- `risk_analysis`
-- `relation_query` *(현재는 실험 단계)*
+### 2. Supervisor Agent
+- **LangChain + OpenAI LLM**
+- 현재 질문에 대해 어떤 분석 전략을 사용할지 결정.
 
-### 2. News retrieval with vector search
-금융 뉴스 문서를 chunk 단위로 분할하고, Chroma (Vector DB) 기반 semantic retrieval을 수행.
+다음과 같은 결정을 담당:
+- retrieval 범위(`retrieval_k`)
+- 특정 기업 중심 검색 여부(`retrieval_company`)
+- selective upsert 수행 여부
+- hybrid graph 사용 여부
+- brief generation 수행 여부
+- retrieval / extraction 실패 시 re-planning
 
-### 3. LLM-based relation extraction
+### 3. Analysis Agent 
+- **LangChain + OpenAI LLM**
+- Supervisor가 정한 계획을 실제로 실행.
+- 
+다음 단계를 수행:
+1. 관련 뉴스 chunk retrieval
+2. LLM 기반 relation extraction
+3. selective graph upsert
+4. persistent graph relation 조회
+5. hybrid graph relation 생성
+6. 최종 brief / report 생성
+7. structured output 반환
+
+### 4. News retrieval with vector search
+- **LangChain-Chroma Vector DB**
+- 뉴스 문서를 chunk 단위로 저장하고 semantic retrieval을 수행다.
+- 질문과 관련된 문서 조각을 검색하는 역할을 담당.
+
+### 5. Relation Extraction
+- **LangChain + OpenAI LLM**
 뉴스 본문에서 기업과 이벤트 간 관계를 추출.
 
 예:
 - `삼성전자 -> benefits_from -> 상법 개정안 통과`
 - `삼성전자 -> reports -> 대규모 자사주 소각`
 
-### 4. Selective graph persistence
-모든 관계를 저장하지 않고, post-processing 이후 남은 **고신뢰(High Confidence) relation만 Neo4j (Graph DB)에 selective upsert** 함.
+### 6. Graph Layer
+- **Neo4j**
+- 고신뢰 relation만 selective upsert 방식으로 저장.
+- 질의 시점 current relation과 기존 persistent relation을 결합하여
+  hybrid graph context를 구성..
 
-### 5. Hybrid Graph Context
-현재 질의에서 추출한 relation과 기존 그래프에 축적된 persistent relation을 결합해  
-`current / persistent / hybrid` source type을 구분.
-
-### 6. Explainable report generation
-최종 결과를 단순 답변이 아니라 다음 요소와 함께 제공.
-
-- 핵심 투자 포인트
-- 리스크 포인트
-- 하이브리드 그래프 관계
-- 검색 문서 근거
-- 분석 경로(supervisor explanation)
-
-### 7. Streamlit UI
-분석 결과를 보고서와 그래프 시각화 형태로 확인.
+### 7. Report Generation Layer
+- **LangChain + OpenAI structured output**
+- 핵심 투자 포인트 / 리스크 포인트 / 관계 요약을 생성하고,
+- 최종적으로 explainable report와 structured response를 반환.
 
 ---
 
