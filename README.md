@@ -99,22 +99,25 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 ---
 
 ## System Architecture
-
 ```text
 User Query
    ↓
-Intent Classifier (LLM)
+[Streamlit UI]
    ↓
-Supervisor Planner (LLM)
+[FastAPI API]
    ↓
-Retriever (Chroma)
+[LangGraph Workflow]
+   ├── route_node
+   │     └── LLM intent classification
+   │
+   └── analysis_agent_node
+         ├── Supervisor Agent (plan / re-plan)
+         ├── Retriever (Chroma)
+         ├── Relation Extractor (LLM)
+         ├── Selective Upsert (Neo4j)
+         ├── Hybrid Graph Builder
+         └── Brief / Report Generator
    ↓
-Relation Extractor (LLM)
+Structured Response + Graph + Logs
    ↓
-Selective Upsert (Neo4j)
-   ↓
-Hybrid Graph Builder
-   ↓
-Brief / Report Generator
-   ↓
-Streamlit UI / FastAPI Response
+[Streamlit Visualization]
