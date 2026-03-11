@@ -37,7 +37,7 @@ LLM 기반 intent classification으로 질의를 다음 유형으로 분류.
 - `relation_query` *(현재는 실험 단계)*
 
 ### 2. News retrieval with vector search
-금융 뉴스 문서를 chunk 단위로 분할하고, Chroma 기반 semantic retrieval을 수행.
+금융 뉴스 문서를 chunk 단위로 분할하고, Chroma (Vector DB) 기반 semantic retrieval을 수행.
 
 ### 3. LLM-based relation extraction
 뉴스 본문에서 기업과 이벤트 간 관계를 추출.
@@ -47,7 +47,7 @@ LLM 기반 intent classification으로 질의를 다음 유형으로 분류.
 - `삼성전자 -> reports -> 대규모 자사주 소각`
 
 ### 4. Selective graph persistence
-모든 관계를 저장하지 않고, post-processing 이후 남은 **고신뢰 relation만 Neo4j에 selective upsert** 함.
+모든 관계를 저장하지 않고, post-processing 이후 남은 **고신뢰(High Confidence) relation만 Neo4j (Graph DB)에 selective upsert** 함.
 
 ### 5. Hybrid Graph Context
 현재 질의에서 추출한 relation과 기존 그래프에 축적된 persistent relation을 결합해  
