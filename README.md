@@ -22,6 +22,8 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 
 <img width="2394" height="501" alt="image" src="https://github.com/user-attachments/assets/99a11792-8a93-42fc-8783-ce4fbe37a3b6" />
 
+<img width="2396" height="630" alt="image" src="https://github.com/user-attachments/assets/682436e4-50c3-4247-aa78-2b52624d4440" />
+
 
 ---
 
