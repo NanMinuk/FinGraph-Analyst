@@ -38,6 +38,19 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
   - `route_node`
   - `analysis_agent_node`
 
+<table>
+  <tr>
+    <th>분석 워크플로우</th>
+    <th>Ingestion 워크플로우</th>
+  </tr>
+  <tr>
+    <td><img width="429" height="928" alt="analysis_workflow" src="https://github.com/user-attachments/assets/f7a90aac-6229-4ada-a632-92f21bf397d1" /></td>
+    <td></td><img width="211" height="729" alt="ingestion_workflow" src="https://github.com/user-attachments/assets/59ace98a-f87a-4c59-b533-d91973a184b7" /></td>
+
+  </tr>
+</table>
+```
+
 ### 1. Intent-aware analysis
 - **LangChain + OpenAI LLM**
 - `route_node`에서 사용자 질의를 분석하여 intent를 분류한다.
