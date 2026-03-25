@@ -180,9 +180,9 @@ NEO4J_PASSWORD=your_password
 ### 3. 실행
 
 ```bash
-# FastAPI 서버 (터미널 1)
+# FastAPI 서버 
 uvicorn app.api.main:app --reload
 
-# Streamlit UI (터미널 2)
+# Streamlit UI 
 streamlit run app/ui/streamlit_app.py
 ```
