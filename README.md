@@ -162,7 +162,7 @@ Structured Response + Graph + Logs
 
 ```bash
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate 
 pip install -r requirements.txt
 ```
 
@@ -186,5 +186,3 @@ uvicorn app.api.main:app --reload
 # Streamlit UI (터미널 2)
 streamlit run app/ui/streamlit_app.py
 ```
-
-FastAPI Swagger UI: http://127.0.0.1:8000/docs
