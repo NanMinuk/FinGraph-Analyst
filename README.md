@@ -41,7 +41,7 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 
 ### 1. Intent-aware analysis
 - **LangChain + OpenAI LLM**
-- `route_node`에서 사용자 질의를 분석하여 intent를 분류합니다.
+- `route_node`에서 사용자 질의를 분석하여 intent를 분류한다.
 - 지원 intent:
   - `company_analysis`
   - `risk_analysis`
@@ -74,7 +74,7 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 
 ### 4. News retrieval with vector search
 - **LangChain-Chroma Vector DB**
-- 뉴스 문서를 chunk 단위로 저장하고 semantic retrieval을 수행다.
+- 뉴스 문서를 chunk 단위로 저장하고 semantic retrieval을 수행한다.
 - 질문과 관련된 문서 조각을 검색하는 역할을 담당.
 
 ### 5. Relation Extraction
