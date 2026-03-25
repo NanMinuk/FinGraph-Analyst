@@ -72,7 +72,7 @@ def build_structured_brief_from_report(
     intent: str,
     report: str,
 ):
-    llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+    llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
 
     structured_llm = llm.with_structured_output(AnalysisAgentOutput)
 
