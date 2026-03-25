@@ -38,7 +38,6 @@ def route_after_extraction(state: AppState) -> str:
 def build_workflow():
     graph = StateGraph(AppState)
 
-    # ── 노드 등록 
     graph.add_node("route", route_node)
     graph.add_node("plan", plan_node)
     graph.add_node("retrieval", retrieval_node)
@@ -50,13 +49,10 @@ def build_workflow():
     graph.add_node("brief", brief_node)
     graph.add_node("structured", structured_node)
 
-    # ── 엣지 연결
     graph.set_entry_point("route")
 
     graph.add_edge("route", "plan")
     graph.add_edge("plan", "retrieval")
-
-    # retrieval → (replan_retrieval | extraction)
     graph.add_conditional_edges(
         "retrieval",
         route_after_retrieval,
@@ -65,11 +61,7 @@ def build_workflow():
             "extraction": "extraction",
         },
     )
-
-    # replan 후 다시 retrieval
     graph.add_edge("replan_retrieval", "retrieval")
-
-    # extraction → (replan_extraction | upsert)
     graph.add_conditional_edges(
         "extraction",
         route_after_extraction,
@@ -78,10 +70,7 @@ def build_workflow():
             "upsert": "upsert",
         },
     )
-
-    # replan 후 다시 retrieval → extraction
     graph.add_edge("replan_extraction", "retrieval")
-
     graph.add_edge("upsert", "graph_builder")
     graph.add_edge("graph_builder", "brief")
     graph.add_edge("brief", "structured")

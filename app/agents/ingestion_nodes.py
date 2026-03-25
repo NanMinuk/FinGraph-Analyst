@@ -1,19 +1,3 @@
-"""
-ingestion_nodes.py
-
-ingest_news_urls() 파이프라인을 독립적인 LangGraph 노드로 분리한 파일.
-
-노드 실행 순서:
-  validate_urls_node
-    → [urls 없음] → END
-    → [urls 있음] → fetch_node
-  fetch_node          : URL fetch + 중복 체크 → raw_news_docs / ingestion_results
-  store_raw_node      : raw 뉴스 문서를 Chroma에 upsert
-  chunk_node          : 문서를 청크로 분할
-  store_chunks_node   : 청크를 Chroma에 upsert
-  summarize_node      : ingestion_summary 집계
-"""
-
 from typing import Any, Dict, List
 
 from app.agents.state import AppState
@@ -66,17 +50,13 @@ def fetch_node(state: AppState) -> AppState:
 
     for url in urls:
         try:
-            # 1-1) doc_id(URL) 중복 체크
             if exists_by_doc_id(url):
                 results.append({"url": url, "status": "skipped_existing_doc_id"})
                 logs.append(f"fetch_node: skipped (doc_id exists) url={url}")
                 continue
-
-            # 1-2) fetch + document 빌드
             news_doc = fetch_news_from_url(url)
             lc_doc = build_langchain_document_from_news(news_doc)
 
-            # 1-3) content_hash 중복 체크
             content_hash = lc_doc.metadata.get("content_hash")
             if content_hash and exists_by_content_hash(content_hash):
                 results.append({
@@ -87,7 +67,6 @@ def fetch_node(state: AppState) -> AppState:
                 logs.append(f"fetch_node: skipped (content_hash exists) url={url}")
                 continue
 
-            # 1-4) 신규 문서 등록
             ingested_doc = {
                 "doc_id": lc_doc.metadata.get("doc_id"),
                 "title": lc_doc.metadata.get("title"),

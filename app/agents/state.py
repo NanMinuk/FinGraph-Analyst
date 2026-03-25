@@ -29,7 +29,6 @@ class AppState(TypedDict, total=False):
     risk_points : List[str]
     relation_points : List[str]
 
-    # ingestion 중간 상태
     raw_news_docs: List[Document]              # fetch_node 결과 (LangChain Document 객체)
     new_documents: List[Dict[str, Any]]        # 중복 제외된 신규 문서
     chunked_documents: List[Dict[str, Any]]    # chunk 생성 결과

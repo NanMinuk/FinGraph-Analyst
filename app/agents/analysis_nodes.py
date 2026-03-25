@@ -1,20 +1,3 @@
-"""
-analysis_nodes.py
-
-run_analysis_agent의 각 단계를 독립적인 LangGraph 노드로 분리한 파일.
-
-노드 실행 순서:
-  plan_node
-    → retrieval_node
-      → (retrieved_count == 0) → replan_retrieval_node → retrieval_node  (최대 1회)
-    → extraction_node
-      → (relations == 0) → replan_extraction_node → retrieval_node → extraction_node  (최대 1회)
-    → upsert_node
-    → graph_node
-    → brief_node
-    → structured_node
-"""
-
 from typing import Any, Dict
 
 from app.agents.analysis_supervisor import (
@@ -29,9 +12,6 @@ from app.tools.graph_tools import build_hybrid_graph_context_tool, selective_ups
 from app.tools.reporting_tools import generate_investment_brief_tool
 from app.tools.retrieval_tools import retrieve_relevant_chunks_tool
 
-# ---------------------------------------------------------------------------
-# 헬퍼: state에서 공통 기본값 초기화
-# ---------------------------------------------------------------------------
 
 def _default_supervisor_explanation() -> Dict[str, Any]:
     return {

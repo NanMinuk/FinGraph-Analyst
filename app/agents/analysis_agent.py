@@ -82,7 +82,7 @@ def run_analysis_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     # -------------------------------------------------
     # 1) retrieval
     # -------------------------------------------------
-    # -------------------------------------------------
+
     if plan["use_retrieval"]:
         retrieval_query = query
         if intent == "risk_analysis":
