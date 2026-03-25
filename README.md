@@ -5,6 +5,7 @@
 투자 포인트와 리스크를 구조화하는 **Agentic GraphRAG 분석 시스템**입니다.
 
 ---
+<img width="429" height="928" alt="analysis_workflow" src="https://github.com/user-attachments/assets/035a54c8-5151-426a-90b9-031fc99c3757" />
 
 
 ## Overview
