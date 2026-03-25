@@ -34,9 +34,15 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 ### 0. Workflow Orchestration
 - **LangGraph**
 - 전체 분석 흐름을 관리하는 orchestration layer.
-- 현재 workflow는 다음 두 개의 핵심 노드로 구성:
-  - `route_node`
-  - `analysis_agent_node`
+- 각 단계를 독립 노드로 분리하여 supervisor의 re-planning을 conditional edge로 처리.
+
+**분석 워크플로우 노드 구성:**
+- `route` → `plan` → `retrieval` → `extraction` → `upsert` → `graph` → `brief` → `structured`
+- retrieval / extraction 결과가 없을 경우 `replan_retrieval` / `replan_extraction` 노드를 거쳐 재시도
+
+**Ingestion 워크플로우 노드 구성:**
+- `validate_urls` → `fetch` → `store_raw` → `chunk` → `store_chunks` → `summarize_ingestion`
+- URL이 없거나 신규 문서가 없으면 조기 종료
 
 <table>
   <tr>
@@ -45,15 +51,13 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
   </tr>
   <tr>
     <td><img width="429" height="928" alt="analysis_workflow" src="https://github.com/user-attachments/assets/f7a90aac-6229-4ada-a632-92f21bf397d1" /></td>
-    <td></td><img width="211" height="729" alt="ingestion_workflow" src="https://github.com/user-attachments/assets/59ace98a-f87a-4c59-b533-d91973a184b7" /></td>
-
+    <td><img width="211" height="729" alt="ingestion_workflow" src="https://github.com/user-attachments/assets/59ace98a-f87a-4c59-b533-d91973a184b7" /></td>
   </tr>
 </table>
-```
 
 ### 1. Intent-aware analysis
 - **LangChain + OpenAI LLM**
-- `route_node`에서 사용자 질의를 분석하여 intent를 분류한다.
+- `route` 노드에서 사용자 질의를 분석하여 intent를 분류한다.
 - 지원 intent:
   - `company_analysis`
   - `risk_analysis`
@@ -61,28 +65,28 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 
 ### 2. Supervisor Agent
 - **LangChain + OpenAI LLM**
-- 현재 질문에 대해 어떤 분석 전략을 사용할지 결정.
+- `plan` 노드에서 현재 질문에 대해 어떤 분석 전략을 사용할지 결정.
 
 다음과 같은 결정을 담당:
-- retrieval 범위(`retrieval_k`)
-- 특정 기업 중심 검색 여부(`retrieval_company`)
+- retrieval 범위 (`retrieval_k`)
+- 특정 기업 중심 검색 여부 (`retrieval_company`)
 - selective upsert 수행 여부
 - hybrid graph 사용 여부
 - brief generation 수행 여부
-- retrieval / extraction 실패 시 re-planning
+- retrieval / extraction 실패 시 re-planning (`replan_retrieval`, `replan_extraction` 노드로 분기)
 
-### 3. Analysis Agent 
+### 3. Analysis Agent
 - **LangChain + OpenAI LLM**
-- Supervisor가 정한 계획을 실제로 실행.
-- 
-다음 단계를 수행:
-1. 관련 뉴스 chunk retrieval
-2. LLM 기반 relation extraction
-3. selective graph upsert
-4. persistent graph relation 조회
-5. hybrid graph relation 생성
-6. 최종 brief / report 생성
-7. structured output 반환
+- Supervisor가 정한 계획을 각 독립 노드에서 단계별로 실행.
+
+| 노드 | 역할 |
+|---|---|
+| `retrieval` | 관련 뉴스 chunk retrieval |
+| `extraction` | LLM 기반 relation / entity 추출 |
+| `upsert` | selective graph upsert (Neo4j) |
+| `graph` | persistent relation 조회 + hybrid graph 생성 |
+| `brief` | 투자 brief / report 생성 |
+| `structured` | structured output 반환 |
 
 ### 4. News retrieval with vector search
 - **LangChain-Chroma Vector DB**
@@ -91,7 +95,7 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 
 ### 5. Relation Extraction
 - **LangChain + OpenAI LLM**
-뉴스 본문에서 기업과 이벤트 간 관계를 추출.
+- 뉴스 본문에서 기업과 이벤트 간 관계를 추출.
 
 예:
 - `삼성전자 -> benefits_from -> 상법 개정안 통과`
@@ -101,7 +105,7 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 - **Neo4j**
 - 고신뢰 relation만 selective upsert 방식으로 저장.
 - 질의 시점 current relation과 기존 persistent relation을 결합하여
-  hybrid graph context를 구성..
+  hybrid graph context를 구성.
 
 ### 7. Report Generation Layer
 - **LangChain + OpenAI structured output**
@@ -111,6 +115,7 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 ---
 
 ## System Architecture
+
 ```text
 User Query
    ↓
@@ -119,17 +124,67 @@ User Query
 [FastAPI API]
    ↓
 [LangGraph Workflow]
-   ├── route_node
-   │     └── LLM intent classification
    │
-   └── analysis_agent_node
-         ├── Supervisor Agent (plan / re-plan)
-         ├── Retriever (Chroma)
-         ├── Relation Extractor (LLM)
-         ├── Selective Upsert (Neo4j)
-         ├── Hybrid Graph Builder
-         └── Brief / Report Generator
+   ├── route          : LLM intent classification
+   ├── plan           : Supervisor (전략 수립 / re-plan)
+   ├── retrieval      : Chroma vector search
+   ├── replan_retrieval    : 검색 결과 없을 때 plan 재수립
+   ├── extraction     : LLM relation / entity 추출
+   ├── replan_extraction   : relation 없을 때 plan 재수립
+   ├── upsert         : Neo4j selective upsert
+   ├── graph          : Hybrid graph context 구성
+   ├── brief          : 투자 brief 생성
+   └── structured     : Structured output 반환
    ↓
 Structured Response + Graph + Logs
    ↓
 [Streamlit Visualization]
+```
+
+---
+
+## Tech Stack
+
+| 분류 | 기술 |
+|---|---|
+| Workflow | LangGraph |
+| LLM | LangChain + OpenAI |
+| Vector DB | Chroma |
+| Graph DB | Neo4j |
+| API | FastAPI + Uvicorn |
+| UI | Streamlit + Pyvis |
+
+---
+
+## Getting Started
+
+### 1. 환경 설정
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. 환경변수 설정
+
+`.env` 파일을 프로젝트 루트에 생성:
+
+```
+OPENAI_API_KEY=sk-...
+NEO4J_URI=neo4j://127.0.0.1:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password
+```
+
+### 3. 실행
+
+```bash
+# FastAPI 서버 (터미널 1)
+uvicorn app.api.main:app --reload
+
+# Streamlit UI (터미널 2)
+streamlit run app/ui/streamlit_app.py
+```
+
+FastAPI Swagger UI: http://127.0.0.1:8000/docs
