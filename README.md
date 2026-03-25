@@ -36,22 +36,22 @@ FinGraph Analyst는 금융 뉴스 안의 비정형 정보를 **Company / Event /
 - 전체 분석 흐름을 관리하는 orchestration layer.
 - 각 단계를 독립 노드로 분리하여 supervisor의 re-planning을 conditional edge로 처리.
 
-**분석 워크플로우 노드 구성:**
-- `route` → `plan` → `retrieval` → `extraction` → `upsert` → `graph` → `brief` → `structured`
-- retrieval / extraction 결과가 없을 경우 `replan_retrieval` / `replan_extraction` 노드를 거쳐 재시도
-
 **Ingestion 워크플로우 노드 구성:**
 - `validate_urls` → `fetch` → `store_raw` → `chunk` → `store_chunks` → `summarize_ingestion`
 - URL이 없거나 신규 문서가 없으면 조기 종료
 
+**분석 워크플로우 노드 구성:**
+- `route` → `plan` → `retrieval` → `extraction` → `upsert` → `graph` → `brief` → `structured`
+- retrieval / extraction 결과가 없을 경우 `replan_retrieval` / `replan_extraction` 노드를 거쳐 재시도
+
 <table>
   <tr>
-    <th>분석 워크플로우</th>
     <th>Ingestion 워크플로우</th>
+    <th>분석 워크플로우</th>
   </tr>
   <tr>
-    <td><img width="429" height="928" alt="analysis_workflow" src="https://github.com/user-attachments/assets/f7a90aac-6229-4ada-a632-92f21bf397d1" /></td>
     <td><img width="211" height="729" alt="ingestion_workflow" src="https://github.com/user-attachments/assets/59ace98a-f87a-4c59-b533-d91973a184b7" /></td>
+    <td><img width="429" height="928" alt="analysis_workflow" src="https://github.com/user-attachments/assets/f7a90aac-6229-4ada-a632-92f21bf397d1" /></td>
   </tr>
 </table>
 
