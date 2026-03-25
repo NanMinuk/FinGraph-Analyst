@@ -1,24 +1,3 @@
-"""
-workflow.py
-
-LangGraph 워크플로우 구성.
-
-노드 흐름:
-  route
-    → plan
-    → retrieval
-      → [retrieved_count == 0 & replan_count < 1]  → replan_retrieval → retrieval
-      → [그 외]                                     → extraction
-    → extraction
-      → [relations == 0 & extraction_replan_count < 1] → replan_extraction → retrieval → extraction
-      → [그 외]                                         → upsert
-    → upsert
-    → graph
-    → brief
-    → structured
-    → END
-"""
-
 from langgraph.graph import StateGraph, END
 
 from app.agents.state import AppState
@@ -35,10 +14,6 @@ from app.agents.analysis_nodes import (
     structured_node,
 )
 
-
-# ---------------------------------------------------------------------------
-# Conditional edge 라우터
-# ---------------------------------------------------------------------------
 
 def route_after_retrieval(state: AppState) -> str:
     """검색 결과가 없고 아직 replan 기회가 남아있으면 replan, 아니면 extraction으로."""
@@ -60,14 +35,10 @@ def route_after_extraction(state: AppState) -> str:
     return "upsert"
 
 
-# ---------------------------------------------------------------------------
-# 워크플로우 빌더
-# ---------------------------------------------------------------------------
-
 def build_workflow():
     graph = StateGraph(AppState)
 
-    # ── 노드 등록 ──────────────────────────────────────────────────────────
+    # ── 노드 등록 
     graph.add_node("route", route_node)
     graph.add_node("plan", plan_node)
     graph.add_node("retrieval", retrieval_node)
@@ -79,7 +50,7 @@ def build_workflow():
     graph.add_node("brief", brief_node)
     graph.add_node("structured", structured_node)
 
-    # ── 엣지 연결 ──────────────────────────────────────────────────────────
+    # ── 엣지 연결
     graph.set_entry_point("route")
 
     graph.add_edge("route", "plan")
