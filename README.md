@@ -172,8 +172,8 @@ pip install -r requirements.txt
 
 ```
 OPENAI_API_KEY=sk-...
-NEO4J_URI=neo4j://127.0.0.1:7687
-NEO4J_USER=neo4j
+NEO4J_URI=neo4j:
+NEO4J_USER=
 NEO4J_PASSWORD=your_password
 ```
 
