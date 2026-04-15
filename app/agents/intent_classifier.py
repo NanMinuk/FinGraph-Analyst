@@ -1,10 +1,9 @@
 from typing import Literal
 
-from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 
-load_dotenv()
+from app.config import SUPERVISOR_MODEL
 
 
 class IntentClassification(BaseModel):
@@ -15,7 +14,7 @@ class IntentClassification(BaseModel):
 
 
 def classify_intent_llm(query: str) -> str:
-    llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
+    llm = ChatOpenAI(model=SUPERVISOR_MODEL, temperature=0)
 
     structured_llm = llm.with_structured_output(
         IntentClassification,

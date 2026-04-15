@@ -22,7 +22,7 @@ RETURN h.name AS head,
        r.confidence AS confidence,
        r.evidence AS evidence,
        r.document_id AS document_id
-LIMIT 20
+LIMIT $limit
 """
 
 GET_RELEVANT_GRAPH_RELATIONS_QUERY = """
@@ -37,5 +37,5 @@ RETURN h.name AS head,
        r.confidence AS confidence,
        r.evidence AS evidence,
        r.document_id AS document_id
-LIMIT 20
+LIMIT $limit
 """

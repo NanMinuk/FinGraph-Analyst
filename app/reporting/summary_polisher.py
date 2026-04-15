@@ -1,8 +1,7 @@
-from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
-load_dotenv()
+from app.config import EXTRACTION_MODEL
 
 
 def polish_brief_summary(
@@ -11,7 +10,7 @@ def polish_brief_summary(
     relations_text: str,
     max_sentences: int = 2,
 ) -> str:
-    llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0.2)
+    llm = ChatOpenAI(model=EXTRACTION_MODEL, temperature=0.2)
 
     prompt = f"""
 사용자 질문과 추출된 핵심 관계를 바탕으로 금융 리서치 브리프의 '한 줄 요약'을 작성하라.

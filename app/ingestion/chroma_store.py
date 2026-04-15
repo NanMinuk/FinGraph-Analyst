@@ -1,29 +1,28 @@
 from pathlib import Path
 from typing import List
 
-from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_classic.embeddings import CacheBackedEmbeddings
 from langchain_classic.storage import LocalFileStore
 
-load_dotenv()
+from app.config import CHROMA_PATH as _CHROMA_PATH, EMBED_CACHE_PATH as _EMBED_CACHE_PATH, EMBEDDING_MODEL
 
-CHROMA_PATH = Path("data/chroma_langchain")
-EMBED_CACHE_PATH = Path("data/embedding_cache")
+CHROMA_PATH = Path(_CHROMA_PATH)
+EMBED_CACHE_PATH = Path(_EMBED_CACHE_PATH)
 RAW_COLLECTION_NAME = "raw_news"
 CHUNK_COLLECTION_NAME = "news_chunks"
 
 
 def get_embeddings():
-    underlying_embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    underlying_embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
     EMBED_CACHE_PATH.mkdir(parents=True, exist_ok=True)
     store = LocalFileStore(str(EMBED_CACHE_PATH))
     return CacheBackedEmbeddings.from_bytes_store(
         underlying_embeddings=underlying_embeddings,
         document_embedding_cache=store,
-        namespace="text-embedding-3-small",
+        namespace=EMBEDDING_MODEL,
     )
 
 

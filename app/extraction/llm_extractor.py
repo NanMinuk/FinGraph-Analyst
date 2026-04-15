@@ -1,12 +1,10 @@
 import json
 from typing import Dict, Any, List
 
-from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from app.extraction.relation_normalizer import normalize_relations
-
-load_dotenv()
+from app.config import EXTRACTION_MODEL
 
 
 def build_batch_extraction_prompt(docs: List[Dict[str, Any]]) -> str:
@@ -69,7 +67,7 @@ def extract_entities_and_relations_llm_batch(docs: List[Dict[str, Any]]) -> Dict
     if not docs:
         return {"entities": [], "relations": []}
 
-    llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+    llm = ChatOpenAI(model=EXTRACTION_MODEL, temperature=0)
 
     messages = [
         SystemMessage(content="너는 금융 뉴스에서 회사와 이벤트 관계를 구조화하는 정보추출기다."),

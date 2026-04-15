@@ -1,14 +1,13 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
-from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-load_dotenv()
+from app.config import SUPERVISOR_MODEL, EXTRACTION_MODEL, RETRIEVAL_K_MAX
 
 
 class AnalysisPlan(BaseModel):
     intent: Literal["company_analysis", "risk_analysis", "relation_query"] = Field(...)
-    retrieval_k: int = Field(..., ge=1, le=10)
+    retrieval_k: int = Field(..., ge=1, le=RETRIEVAL_K_MAX)
     retrieval_company: Optional[str] = Field(default=None)
     use_retrieval: bool = Field(default=True)
     use_extraction: bool = Field(default=True)
@@ -23,7 +22,7 @@ def make_analysis_plan_llm(state):
     company = state.get("company")
     intent = state.get("intent", "company_analysis")
 
-    llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
+    llm = ChatOpenAI(model=SUPERVISOR_MODEL, temperature=0)
     planner = llm.with_structured_output(AnalysisPlan)
 
     prompt = f"""
@@ -110,7 +109,7 @@ def replan_after_retrieval(state, previous_plan, retrieved_count: int):
     intent = state.get("intent", "company_analysis")
 
     try:
-        llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+        llm = ChatOpenAI(model=EXTRACTION_MODEL, temperature=0)
         planner = llm.with_structured_output(AnalysisPlan)
 
         prompt = f"""
@@ -168,7 +167,7 @@ def replan_after_extraction(state, previous_plan, relation_count: int):
     intent = state.get("intent", "company_analysis")
 
     try:
-        llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+        llm = ChatOpenAI(model=EXTRACTION_MODEL, temperature=0)
         planner = llm.with_structured_output(AnalysisPlan)
 
         prompt = f"""

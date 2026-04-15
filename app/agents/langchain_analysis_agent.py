@@ -1,15 +1,13 @@
-from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
 from app.tools.langchain_tools import ALL_ANALYSIS_TOOLS
 from app.agents.agent_output_schema import AnalysisAgentOutput
-
-load_dotenv()
+from app.config import SUPERVISOR_MODEL, ANALYSIS_MODEL
 
 
 def get_langchain_analysis_agent():
-    model = ChatOpenAI(model="gpt-5-nano", temperature=0)
+    model = ChatOpenAI(model=ANALYSIS_MODEL, temperature=0)
 
     agent = create_agent(
         model=model,
@@ -25,7 +23,7 @@ def get_langchain_analysis_agent():
     return agent
 
 def get_structured_response_model():
-    llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
+    llm = ChatOpenAI(model=ANALYSIS_MODEL, temperature=0)
     return llm.with_structured_output(AnalysisAgentOutput)
 
 def run_structured_analysis(query: str, company: str | None = None):
@@ -72,7 +70,7 @@ def build_structured_brief_from_report(
     intent: str,
     report: str,
 ):
-    llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
+    llm = ChatOpenAI(model=ANALYSIS_MODEL, temperature=0)
 
     structured_llm = llm.with_structured_output(AnalysisAgentOutput)
 

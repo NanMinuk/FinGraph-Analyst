@@ -1,9 +1,10 @@
-# LangChain 
+# LangChain
 langchain>=1.2.0
 langchain-core>=1.2.0
 langchain-openai>=1.1.0
 langchain-chroma>=0.1.0
 langchain-text-splitters>=0.3.0
+langchain-classic>=0.1.0
 
 # LangGraph
 langgraph>=1.1.0

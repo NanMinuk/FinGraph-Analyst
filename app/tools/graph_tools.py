@@ -3,10 +3,18 @@ from typing import Dict, Any, List, Optional
 from app.graph.neo4j_client import Neo4jClient
 from app.graph.queries import GET_RELEVANT_GRAPH_RELATIONS_QUERY, UPSERT_RELATION_QUERY
 from app.extraction.relation_postprocessor import filter_persistent_relations_for_hybrid, select_relations_for_graph_upsert
+from app.config import (
+    GRAPH_UPSERT_CONFIDENCE,
+    HYBRID_CURRENT_WEIGHT,
+    HYBRID_PERSISTENT_WEIGHT,
+    HYBRID_UPSERT_MIN_CONFIDENCE,
+    NEO4J_GRAPH_LIMIT,
+)
+
 
 def selective_upsert_graph_tool(
     relations: List[Dict[str, Any]],
-    min_confidence: float = 0.8,
+    min_confidence: float = GRAPH_UPSERT_CONFIDENCE,
 ) -> Dict[str, Any]:
     selected_relations = select_relations_for_graph_upsert(
         relations,
@@ -109,7 +117,7 @@ def rerank_hybrid_relations(current_relations, persistent_relations):
             p_conf = merged[key].get("persistent_confidence", 0.0)
 
             if c_conf > 0.0:
-                merged[key]["hybrid_score"] = c_conf * 0.7 + p_conf * 0.3 + 0.1
+                merged[key]["hybrid_score"] = c_conf * HYBRID_CURRENT_WEIGHT + p_conf * HYBRID_PERSISTENT_WEIGHT + 0.1
                 merged[key]["source_type"] = "hybrid"
             else:
                 merged[key]["hybrid_score"] = p_conf
@@ -135,7 +143,7 @@ def build_hybrid_graph_context_tool(
             try:
                 persistent_relations = client.run_query(
                     GET_RELEVANT_GRAPH_RELATIONS_QUERY,
-                    {"company": company},
+                    {"company": company, "limit": NEO4J_GRAPH_LIMIT},
                 )
             finally:
                 client.close()
@@ -154,7 +162,7 @@ def build_hybrid_graph_context_tool(
 
     persistent_relations = filter_persistent_relations_for_hybrid(
         persistent_relations,
-        min_confidence=0.75,
+        min_confidence=HYBRID_UPSERT_MIN_CONFIDENCE,
     )
 
     hybrid_relations = rerank_hybrid_relations(

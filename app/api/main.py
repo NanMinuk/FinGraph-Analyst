@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from app.agents.workflow import build_workflow
 from app.agents.ingestion_workflow import build_ingestion_workflow
+from app.ingestion.chroma_store import get_raw_news_vectorstore, get_chunk_vectorstore
 
 load_dotenv()
 app = FastAPI(title="FinGraph Analyst API")
@@ -19,6 +20,16 @@ class IngestRequest(BaseModel):
 @app.get("/")
 def root():
     return {"message": "FinGraph Analyst API is running"}
+
+
+@app.get("/stats")
+def stats():
+    raw_count = get_raw_news_vectorstore()._collection.count()
+    chunk_count = get_chunk_vectorstore()._collection.count()
+    return {
+        "raw_news": raw_count,
+        "news_chunks": chunk_count,
+    }
 
 
 @app.post("/analyze")
