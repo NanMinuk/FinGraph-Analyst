@@ -132,8 +132,7 @@ company 필터 + 벡터 검색 → company 텍스트 매칭 → 필터 없는 �
 |---|---|---|
 | 관계 추출 Precision 74% | LLM이 head 기업 미언급 문장에서도 관계 생성 | head 기업 명시 조건 강화, few-shot 예시 추가 |
 | 단일 뉴스 소스 | 네이버 뉴스 HTML 파싱 특화 | RSS + 다중 소스 폴백 |
-| Neo4j 쿼리 성능 | LIMIT 하드코딩, 인덱스 없음 | 인덱스 전략 추가, 페이지네이션 적용 |
-| 동기 처리 | FastAPI sync-only | async 전환 + 워커 분리 |
+| Neo4j 쿼리 성능 | LIMIT 하드코딩, 인덱스 없음 | 인덱스 전략 추가 |
 
 ---
 
@@ -182,16 +181,3 @@ docker-compose up --build
 Streamlit UI에서 기업명과 질문 입력:
 - `삼성전자 최근 투자포인트 정리해줘`
 - `SK하이닉스 최근 리스크 요인 알려줘`
-
----
-
-## 평가 재현
-
-```bash
-python -m tests.evaluate \
-  --query "삼성전자 최근 투자포인트" \
-  --company 삼성전자 \
-  --mode auto
-```
-
-결과는 `tests/results/` 에 JSON으로 저장됩니다.
