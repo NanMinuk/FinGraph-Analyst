@@ -1,10 +1,3 @@
-"""
-Retriever 테스트
-- 문서 다양성 보장 (diversify_documents)
-- 결과 변환 (_convert_results)
-- 폴백 로직은 Chroma 의존성으로 인해 mock 사용
-"""
-
 import pytest
 from unittest.mock import MagicMock, patch
 from app.retrieval.retriever import diversify_documents, _convert_results, retrieve_documents

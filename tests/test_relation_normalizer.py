@@ -1,8 +1,3 @@
-"""
-관계 정규화 테스트
-- 한글/영문 변형 → canonical 관계명으로 정규화되는지 검증
-"""
-
 import pytest
 from app.extraction.relation_normalizer import normalize_relation_label, normalize_relations
 

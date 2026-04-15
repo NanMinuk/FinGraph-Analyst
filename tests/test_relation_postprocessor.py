@@ -1,11 +1,3 @@
-"""
-관계 후처리 테스트
-- 낮은 신뢰도 필터링
-- 약한 tail 제거
-- 중복 제거
-- graph upsert 선택 로직
-"""
-
 import pytest
 from app.extraction.relation_postprocessor import (
     filter_low_confidence_relations,
