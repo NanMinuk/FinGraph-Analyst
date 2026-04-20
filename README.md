@@ -30,7 +30,7 @@
 
 GraphRAG로 추출한 관계를 매매 시그널로 변환해 실제 주가 수익률과 비교합니다.
 
-**실험 조건**: 삼성전자(005930) / 2026-03-16 ~ 2026-03-30 / 뉴스 감성 → 시그널
+**실험 조건**: 삼성전자(005930) / 2026-03-16 ~ 2026-03-30 
 
 | 지표 | T+1 전략 | 포지션 전략 | Buy & Hold |
 |---|---|---|---|
@@ -138,6 +138,8 @@ Structured Response + Graph Visualization + Logs
 <img width="2396" height="630" alt="image" src="https://github.com/user-attachments/assets/682436e4-50c3-4247-aa78-2b52624d4440" />
 
 <img width="2410" height="576" alt="image" src="https://github.com/user-attachments/assets/eda1172f-0ace-4508-be55-69e8c49e2e1a" />
+
+<img width="2406" height="1130" alt="image" src="https://github.com/user-attachments/assets/8e56a3eb-3fb0-4a4a-9c4b-73b745365a03" />
 
 ---
 
