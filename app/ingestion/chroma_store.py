@@ -91,3 +91,24 @@ def get_raw_retriever(k: int = 3):
 
 def get_chunk_retriever(k: int = 5):
     return get_chunk_vectorstore().as_retriever(search_kwargs={"k": k})
+
+
+def get_all_chunks_raw(limit: int = 5000) -> list[dict]:
+    """Chroma에서 모든 청크 메타데이터+텍스트를 가져옴 (백테스팅용)."""
+    vectorstore = get_chunk_vectorstore()
+    results = vectorstore.get(include=["documents", "metadatas"], limit=limit)
+    docs = []
+    for text, meta in zip(results.get("documents", []), results.get("metadatas", [])):
+        if not meta:
+            continue
+        docs.append({
+            "doc_id":   meta.get("doc_id"),
+            "chunk_id": meta.get("chunk_id"),
+            "title":    meta.get("title"),
+            "source":   meta.get("source"),
+            "date":     meta.get("date"),
+            "company":  meta.get("company"),
+            "url":      meta.get("url"),
+            "text":     text,
+        })
+    return docs

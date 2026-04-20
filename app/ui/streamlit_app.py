@@ -8,7 +8,8 @@ import streamlit.components.v1 as components
 from pyvis.network import Network
 
 _base_url = os.getenv("API_URL", "http://localhost:8000")
-API_URL = f"{_base_url.rstrip('/')}/analyze"
+API_URL          = f"{_base_url.rstrip('/')}/analyze"
+BACKTEST_API_URL = f"{_base_url.rstrip('/')}/backtest"
 
 
 def deduplicate_graph_relations_for_vis(graph_relations):
@@ -410,3 +411,136 @@ if data:
         st.markdown("### 실행 로그")
         for log in logs:
             st.write(f"- {log}")
+
+
+# ─────────────────────────────────────────────
+# 백테스팅 섹션
+# ─────────────────────────────────────────────
+st.markdown("---")
+st.markdown("## 뉴스 감성 기반 백테스팅")
+st.caption("GraphRAG로 추출된 관계를 매매 시그널로 변환 → 실제 주가 수익률과 비교")
+
+with st.form("backtest_form"):
+    bt_col1, bt_col2 = st.columns(2)
+    with bt_col1:
+        bt_company   = st.text_input("회사명", value="삼성전자")
+        bt_ticker    = st.text_input("종목코드", value="005930")
+        bt_start     = st.text_input("시작일 (YYYY-MM-DD)", value="2026-03-01")
+        bt_end       = st.text_input("종료일 (YYYY-MM-DD)", value="2026-03-15")
+    with bt_col2:
+        bt_hold_days      = st.number_input("보유기간 (거래일)", min_value=1, max_value=20, value=1)
+        bt_buy_threshold  = st.number_input("매수 임계값", min_value=0.0, max_value=1.0, value=0.1, step=0.05)
+        bt_sell_threshold = st.number_input("매도 임계값", min_value=-1.0, max_value=0.0, value=-0.1, step=0.05)
+
+    bt_submit = st.form_submit_button("백테스트 실행")
+
+if bt_submit:
+    with st.spinner("백테스트 실행 중..."):
+        try:
+            bt_resp = requests.post(
+                BACKTEST_API_URL,
+                json={
+                    "company": bt_company,
+                    "ticker": bt_ticker,
+                    "start": bt_start,
+                    "end": bt_end,
+                    "hold_days": int(bt_hold_days),
+                    "buy_threshold": float(bt_buy_threshold),
+                    "sell_threshold": float(bt_sell_threshold),
+                },
+                timeout=300,
+            )
+            bt_resp.raise_for_status()
+            bt_data = bt_resp.json()
+        except Exception as e:
+            st.error(f"백테스트 오류: {e}")
+            bt_data = None
+
+    if bt_data:
+        m = bt_data.get("metrics", {})
+        bnh = bt_data.get("buy_and_hold_return")
+
+        st.markdown("### 성과 지표")
+        mc1, mc2, mc3, mc4, mc5 = st.columns(5)
+        mc1.metric("총 거래", f"{m.get('total_trades', 0)}회")
+        mc2.metric("승률", f"{m['win_rate']:.1%}" if m.get("win_rate") is not None else "N/A")
+        mc3.metric("누적 수익률", f"{m['cumulative_return']:.2%}" if m.get("cumulative_return") is not None else "N/A")
+        mc4.metric("샤프 비율", f"{m['sharpe_ratio']:.2f}" if m.get("sharpe_ratio") is not None else "N/A")
+        mc5.metric("Buy & Hold", f"{bnh:.2%}" if bnh is not None else "N/A")
+
+        if bnh is not None and m.get("cumulative_return") is not None:
+            diff = m["cumulative_return"] - bnh
+            st.markdown(f"**전략 초과수익 (Alpha): `{diff:+.2%}`**")
+
+        st.markdown("### 감성 점수 추이")
+        sentiment_dict = bt_data.get("daily_sentiment", {})
+        if sentiment_dict:
+            sentiment_df = pd.DataFrame(
+                list(sentiment_dict.items()), columns=["date", "sentiment"]
+            ).sort_values("date")
+            sentiment_df["date"] = pd.to_datetime(sentiment_df["date"])
+            sentiment_df = sentiment_df.set_index("date")
+            st.line_chart(sentiment_df["sentiment"])
+
+        st.markdown("### 매매 시그널")
+        signals_dict = bt_data.get("signals", {})
+        if signals_dict:
+            sig_df = pd.DataFrame(
+                [(k, v) for k, v in signals_dict.items()], columns=["date", "signal"]
+            ).sort_values("date")
+            buy_count  = (sig_df["signal"] == "buy").sum()
+            sell_count = (sig_df["signal"] == "sell").sum()
+            hold_count = (sig_df["signal"] == "hold").sum()
+            sc1, sc2, sc3 = st.columns(3)
+            sc1.metric("매수 신호", buy_count)
+            sc2.metric("매도 신호", sell_count)
+            sc3.metric("홀드", hold_count)
+            st.dataframe(sig_df, use_container_width=True)
+
+        # ── T+N 전략 vs 포지션 전략 비교 ──
+        pos_m = bt_data.get("position_metrics", {})
+        st.markdown("### 전략 비교")
+        cmp1, cmp2, cmp3 = st.columns(3)
+        cmp1.metric("항목", "")
+        cmp2.metric("T+N 전략", "")
+        cmp3.metric("포지션 전략", "")
+
+        compare_rows = [
+            ("총 거래", m.get("total_trades"), pos_m.get("total_trades")),
+            ("승률",
+             f"{m['win_rate']:.1%}" if m.get("win_rate") is not None else "N/A",
+             f"{pos_m['win_rate']:.1%}" if pos_m.get("win_rate") is not None else "N/A"),
+            ("누적 수익률",
+             f"{m['cumulative_return']:.2%}" if m.get("cumulative_return") is not None else "N/A",
+             f"{pos_m['cumulative_return']:.2%}" if pos_m.get("cumulative_return") is not None else "N/A"),
+            ("샤프 비율",
+             f"{m['sharpe_ratio']:.2f}" if m.get("sharpe_ratio") is not None else "N/A",
+             f"{pos_m['sharpe_ratio']:.2f}" if pos_m.get("sharpe_ratio") is not None else "N/A"),
+            ("Buy & Hold", f"{bnh:.2%}" if bnh is not None else "N/A", "-"),
+        ]
+        compare_df = pd.DataFrame(compare_rows, columns=["항목", "T+N 전략", "포지션 전략"])
+        st.dataframe(compare_df, use_container_width=True, hide_index=True)
+
+        st.markdown("### T+N 거래 내역")
+        trades = bt_data.get("trades", [])
+        if trades:
+            trades_df = pd.DataFrame(trades)
+            trades_df["결과"] = trades_df["win"].apply(lambda x: "✓ 수익" if x else "✗ 손실")
+            trades_df["return"] = trades_df["return"].apply(lambda x: f"{x:+.2%}")
+            st.dataframe(trades_df[["date", "signal", "return", "결과"]], use_container_width=True)
+        else:
+            st.info("거래 내역이 없습니다.")
+
+        st.markdown("### 포지션 전략 거래 내역")
+        pos_trades = bt_data.get("position_trades", [])
+        if pos_trades:
+            pos_df = pd.DataFrame(pos_trades)
+            pos_df["결과"] = pos_df["win"].apply(lambda x: "✓ 수익" if x else "✗ 손실")
+            pos_df["return"] = pos_df["return"].apply(lambda x: f"{x:+.2%}")
+            st.dataframe(pos_df[["entry_date", "exit_date", "signal", "return", "결과"]], use_container_width=True)
+        else:
+            st.info("거래 내역이 없습니다.")
+
+        with st.expander("전체 백테스팅 리포트"):
+            st.text(bt_data.get("report", ""))
+            st.text(bt_data.get("report_position", ""))
