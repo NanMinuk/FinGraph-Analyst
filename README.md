@@ -99,22 +99,31 @@ Structured Response + Graph Visualization + Logs
 
 ## 주요 설계 결정
 
-### 1. LangGraph를 선택한 이유
-Supervisor의 re-planning 로직을 구현할 때 **조건부 분기**가 핵심이었습니다.  
-retrieval 결과가 0이면 `replan_retrieval` 노드로, relation이 0이면 `replan_extraction` 노드로 분기하는 구조는 LangGraph의 conditional edge로 자연스럽게 표현됩니다.  
-단순 체인(LangChain LCEL)으로는 이 분기를 명시적으로 표현하기 어려웠습니다.
+### 1. DB 구조: 벡터 DB + 그래프 DB 결합
 
-### 2. Hybrid Graph 설계
-현재 질의에서 추출한 관계(current)와 기존에 축적된 관계(persistent)를 단순 합산하면 오래된 정보가 최신 정보를 희석합니다.  
-이를 해결하기 위해 **current 70% + persistent 30% 가중치** 방식의 hybrid scoring을 적용했습니다.
+처음에는 벡터 DB만으로 구현하는 방안을 검토했습니다. 구현이 단순하고 유사도 검색이 빠르다는 장점이 있었습니다.  
+그러나 "A 기업이 B 기업에 투자했고, B 기업이 C 기업과 합병했다"는 식의 다단계 관계 추론은 벡터 유사도만으로는 처리할 수 없었습니다.
 
-### 3. Selective Upsert
+결과적으로 **Chroma(벡터) + Neo4j(그래프)** 결합 구조를 선택했습니다.
+- 문서 간 relevance → 벡터 검색
+- 기업-이벤트 관계 맥락 → 그래프 탐색
+
+### 2. 에이전트 구조: Supervisor-Executor 분리
+
+초기에는 단일 에이전트가 계획과 실행을 모두 담당했습니다. 개발 속도는 빠르지만, 쿼리 유형이 달라질 때 retrieval 실패와 관계 추출 오류가 연쇄적으로 전파됐습니다.
+
+오류 로그를 분석한 결과, 계획과 실행이 분리되지 않으면 실행 단계 실패 시 전체 흐름이 복구 불가능한 상태에 빠지는 것이 원인이었습니다.  
+**Supervisor Agent**(전략 수립) + **Analysis Agent**(단계별 실행)으로 역할을 분리하고, 실패 감지 시 `replan_retrieval` / `replan_extraction` 노드가 흐름을 자동 재구성하도록 conditional edge를 추가했습니다.
+
+### 3. Hybrid Graph 가중치 설계
+
+현재 질의에서 추출한 관계(current)와 기존 누적 관계(persistent)를 단순 합산하면 오래된 정보가 최신 정보를 희석합니다.  
+**current 70% + persistent 30%** 가중치 방식의 hybrid scoring으로 최신성을 유지했습니다.
+
+### 4. Selective Upsert
+
 모든 관계를 Neo4j에 저장하면 노이즈가 누적됩니다.  
 **신뢰도 0.8 이상**인 관계만 저장하는 selective upsert로 그래프 품질을 유지했습니다.
-
-### 4. 3단계 Retrieval 폴백
-company 필터 + 벡터 검색 → company 텍스트 매칭 → 필터 없는 전체 검색 순으로 폴백합니다.  
-첫 번째 단계만 사용하면 새로운 기업 질의 시 결과가 0건이 되는 케이스가 있었기 때문입니다.
 
 ---
 
