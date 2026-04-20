@@ -1,17 +1,3 @@
-"""
-날짜별 뉴스 자동 수집기
-========================
-네이버 뉴스 검색에서 날짜 범위 내 뉴스를 수집하고
-/ingest API로 자동 전송합니다.
-
-사용법:
-  python -m app.backtest.news_collector \
-    --company 삼성전자 \
-    --start 2026-03-01 \
-    --end 2026-03-31 \
-    --per-day 10
-"""
-
 import argparse
 import time
 import os

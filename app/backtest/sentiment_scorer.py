@@ -1,16 +1,3 @@
-"""
-날짜별 감성 점수 계산
-=====================
-추출된 관계(relations)를 날짜별로 집계해 감성 점수를 계산합니다.
-
-관계 타입별 방향:
-  benefits_from  → +1.0 (긍정)
-  invests_in     → +0.7 (긍정)
-  supplies       → +0.5 (약긍정)
-  reports        →  0.0 (중립)
-  regulatory_risk → -1.0 (부정)
-"""
-
 from collections import defaultdict
 from datetime import date, datetime
 from typing import Optional

@@ -1,9 +1,3 @@
-"""
-주가 데이터 수집
-================
-FinanceDataReader로 종목 주가를 가져옵니다.
-"""
-
 from datetime import date
 from typing import Optional
 import pandas as pd

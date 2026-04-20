@@ -1,9 +1,3 @@
-"""
-백테스팅 엔진
-=============
-매매 시그널 + 주가 데이터 → 수익률 지표 계산
-"""
-
 from datetime import date
 from typing import Optional
 import pandas as pd
